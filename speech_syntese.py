@@ -6,7 +6,7 @@ model = AutoModelWithLMHead.from_pretrained("tinkoff-ai/ruDialoGPT-medium")
 
 
 def generate_answer(input_question):
-    prepared_input = "@@ПЕРВЫЙ@@ " + input_question + " @@ВТОРОЙ@@ "
+    prepared_input = f"@@ПЕРВЫЙ@@ {input_question} @@ВТОРОЙ@@ "
     inputs = tokenizer(prepared_input, return_tensors="pt")
     generated_token_ids = model.generate(
         **inputs,
@@ -26,8 +26,13 @@ def generate_answer(input_question):
         tokenizer.decode(sample_token_ids)
         for sample_token_ids in generated_token_ids
     ]
+
+    return clean_answer(context_with_response[0])
+
+def clean_answer(dirty_answer):
     answer = re.sub(
-        "@@ПЕРВЫЙ@@.*"
-        + "?@@ВТОРОЙ@@", "", context_with_response[0], flags=re.DOTALL
+        "@@ПЕРВЫЙ@@.*?@@ВТОРОЙ@@", "",
+        dirty_answer,
+        flags=re.DOTALL
     )
     return answer.replace("@@ПЕРВЫЙ@@", "").replace("@@ВТОРОЙ@@", "")
