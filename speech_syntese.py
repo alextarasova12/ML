@@ -1,15 +1,12 @@
 import re
 from transformers import AutoTokenizer, AutoModelWithLMHead
 
-try:
-    tokenizer = AutoTokenizer.from_pretrained("tinkoff-ai/ruDialoGPT-medium")
-    model = AutoModelWithLMHead.from_pretrained("tinkoff-ai/ruDialoGPT-medium")
-except Exception as e:
-    print(f"Ошибка при загрузке модели или токенизатора: {e}")
-    exit(1)
+tokenizer = AutoTokenizer.from_pretrained("tinkoff-ai/ruDialoGPT-medium")
+model = AutoModelWithLMHead.from_pretrained("tinkoff-ai/ruDialoGPT-medium")
+
 
 def generate_answer(input_question):
-    prepared_input = f"{tokenizer.bos_token} {input_question} {tokenizer.eos_token}"
+    prepared_input = "@@ПЕРВЫЙ@@ " + input_question + " @@ВТОРОЙ@@ "
     inputs = tokenizer(prepared_input, return_tensors="pt")
     generated_token_ids = model.generate(
         **inputs,
@@ -22,7 +19,7 @@ def generate_answer(input_question):
         temperature=1.2,
         repetition_penalty=1.2,
         length_penalty=1.0,
-        eos_token_id=tokenizer.eos_token_id,
+        eos_token_id=50257,
         max_new_tokens=40
     )
     context_with_response = [
@@ -30,6 +27,7 @@ def generate_answer(input_question):
         for sample_token_ids in generated_token_ids
     ]
     answer = re.sub(
-        f"^{tokenizer.bos_token}. * ?{tokenizer.eos_token}", "", context_with_response[0], flags=re.DOTALL
+        "@@ПЕРВЫЙ@@.*"
+        + "?@@ВТОРОЙ@@", "", context_with_response[0], flags=re.DOTALL
     )
-    return answer.replace(tokenizer.bos_token, "").replace(tokenizer.eos_token, "")
+    return answer.replace("@@ПЕРВЫЙ@@", "").replace("@@ВТОРОЙ@@", "")
