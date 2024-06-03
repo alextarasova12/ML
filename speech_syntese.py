@@ -12,7 +12,7 @@ def generate_answer(input_question):
     prepared_input = f"{tokenizer.bos_token} {input_question} {tokenizer.eos_token}"
     inputs = tokenizer(prepared_input, return_tensors="pt")
     generated_token_ids = model.generate(
-         *  * inputs,
+        **inputs,
         top_k=10,
         top_p=0.95,
         num_beams=3,
